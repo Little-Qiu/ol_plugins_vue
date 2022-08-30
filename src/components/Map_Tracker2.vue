@@ -1,10 +1,10 @@
 <!--
  * @Author: 
  * @Date: 2022-08-07 00:04:12
- * @LastEditTime: 2022-08-30 22:53:29
+ * @LastEditTime: 2022-08-30 23:06:09
  * @LastEditors: LittleQ
  * @Description: 
- * @FilePath: \ol_plugins_vue\src\components\Map_Tracker.vue
+ * @FilePath: \ol_plugins_vue\src\components\Map_Tracker2.vue
 -->
 <template>
   <div class="map" id="map"></div>
@@ -26,6 +26,7 @@ import ol_style_Stroke from "ol/style/Stroke";
 import routearrow from "../assets/routearrow.png";
 
 import Point from "ol/geom/Point";
+
 export default {
   name: "Map_Tracker",
   components: {},
@@ -36,7 +37,7 @@ export default {
   watch: {},
   methods: {
     initMap() {
-      var gaodeMapLayer = new TileLayer({
+      let gaodeMapLayer = new TileLayer({
         source: new XYZ({
           url: "http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}",
         }),
@@ -104,52 +105,63 @@ export default {
         featureProjection: map.getView().getProjection(),
       });
       layer.getSource().addFeature(feat);
-      feat.setStyle(this.styles);
+      feat.setStyle(this.arrowLineStyles);
 
       map.getView().fit(feat.getGeometry());
       console.log("init finished");
     },
-    styles(feature, resolution) {
-      let geometry = feature.getGeometry();
-      let length = geometry.getLength(); //获取线段长度
-      let geoStep = (50 * resolution) / length;
-      let dradio = 10000; //投影坐标系，如3857等，在EPSG:4326下可以设置dradio=10000
-      let styles = [
-        new ol_style_Style({
-          stroke: new ol_style_Stroke({
-            color: "green",
-            width: 10,
-          }),
+    //
+    arrowLineStyles(feature, resolution) {
+      let styles = [];
+      let backgroundLineStyle = new ol_style_Style({
+        stroke: new ol_style_Stroke({
+          color: "green",
+          width: 10,
         }),
-      ];
-      for (let i = 0; i <= 1; i += geoStep) {
-        let arrowLocation = geometry.getCoordinateAt(i);
-        geometry.forEachSegment(function (start, end) {
-          if (start[0] == end[0] || start[1] == end[1]) return;
-          let dx1 = end[0] - arrowLocation[0];
-          let dy1 = end[1] - arrowLocation[1];
-          let dx2 = arrowLocation[0] - start[0];
-          let dy2 = arrowLocation[1] - start[1];
-          if (dx1 != dx2 && dy1 != dy2) {
-            if (Math.abs(dradio * dx1 * dy2 - dradio * dx2 * dy1) < 0.001) {
-              let dx = end[0] - start[0];
-              let dy = end[1] - start[1];
-              let rotation = Math.atan2(dy, dx);
-              styles.push(
-                new ol_style_Style({
-                  geometry: new Point(arrowLocation),
-                  image: new ol_style_Icon({
-                    src: routearrow,
-                    anchor: [0.5, 0.5],
-                    rotateWithView: true,
-                    rotation: -rotation + Math.PI,
-                    scale: 0.8,
-                  }),
-                })
-              );
-            }
-          }
-        });
+      });
+      styles.push(backgroundLineStyle);
+      let geometry = feature.getGeometry();
+      const length = geometry.getLength(); //获取线段长度
+      // 内部箭头间隔距离（像素）
+      const step = 50;
+      // 将间隔像素距离转换成地图的真实距离
+      // res 是 OL 自动传入的地图比例系数
+      const geoStep = step * resolution;
+      // 得到一共需要绘制多少个 箭头
+      const arrowNum = Math.floor(length / geoStep);
+      const rotations = [];
+      const distances = [0];
+      // 分割线条，将折线根据坐标进行分割，并遍历
+      // 回调函数将传入开始坐标和结束坐标
+      // 利用开始距离和结束距离，得到每段线条的距离和方向信息
+      geometry.forEachSegment(function (start, end) {
+        let dx = end[0] - start[0];
+        let dy = end[1] - start[1];
+        let rotation = Math.atan2(dy, dx);
+        distances.unshift(Math.sqrt(dx ** 2 + dy ** 2) + distances[0]);
+        rotations.push(rotation);
+      });
+      // 利用之前计算得到的线段矢量信息，生成对应的点样式塞入默认样式中
+      // 从而绘制内部箭头
+      for (let i = 1; i < arrowNum; ++i) {
+        const arrowCoord = geometry.getCoordinateAt(i / arrowNum);
+        const d = i * geoStep;
+        const grid = distances.findIndex((x) => x <= d);
+
+        styles.push(
+          new ol_style_Style({
+            geometry: new Point(arrowCoord),
+            image: new ol_style_Icon({
+              src: routearrow,
+              opacity: 0.8,
+              anchor: [0.5, 0.5],
+              rotateWithView: false,
+              // 读取 rotations 中计算存放的方向信息
+              rotation: -rotations[distances.length - grid - 1],
+              scale: 0.8,
+            }),
+          })
+        );
       }
       return styles;
     },
