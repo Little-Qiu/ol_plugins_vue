@@ -1,7 +1,7 @@
 <!--
  * @Author: 
  * @Date: 2022-08-05 23:40:22
- * @LastEditTime: 2022-08-30 23:02:55
+ * @LastEditTime: 2022-09-30 22:46:28
  * @LastEditors: LittleQ
  * @Description: 
  * @FilePath: \ol_plugins_vue\src\views\Home.vue
@@ -14,7 +14,7 @@
 
 <script>
 // @ is an alias to /src
-import Map from "@/components/Map_Tracker2.vue";
+import Map from "@/components/Map_WebglPoints.vue";
 
 export default {
   name: "Home",

@@ -1,7 +1,7 @@
 <!--
  * @Author: 
  * @Date: 2022-08-07 00:04:12
- * @LastEditTime: 2022-08-30 23:06:09
+ * @LastEditTime: 2022-08-31 23:06:04
  * @LastEditors: LittleQ
  * @Description: 
  * @FilePath: \ol_plugins_vue\src\components\Map_Tracker2.vue
@@ -110,9 +110,10 @@ export default {
       map.getView().fit(feat.getGeometry());
       console.log("init finished");
     },
-    //
+    // 箭头样式
     arrowLineStyles(feature, resolution) {
       let styles = [];
+      // 线条样式
       let backgroundLineStyle = new ol_style_Style({
         stroke: new ol_style_Stroke({
           color: "green",
@@ -121,19 +122,16 @@ export default {
       });
       styles.push(backgroundLineStyle);
       let geometry = feature.getGeometry();
-      const length = geometry.getLength(); //获取线段长度
-      // 内部箭头间隔距离（像素）
+      // 获取线段长度
+      const length = geometry.getLength();
+      // 箭头间隔距离（像素）
       const step = 50;
       // 将间隔像素距离转换成地图的真实距离
-      // res 是 OL 自动传入的地图比例系数
-      const geoStep = step * resolution;
+      const StepLength = step * resolution;
       // 得到一共需要绘制多少个 箭头
-      const arrowNum = Math.floor(length / geoStep);
+      const arrowNum = Math.floor(length / StepLength);
       const rotations = [];
       const distances = [0];
-      // 分割线条，将折线根据坐标进行分割，并遍历
-      // 回调函数将传入开始坐标和结束坐标
-      // 利用开始距离和结束距离，得到每段线条的距离和方向信息
       geometry.forEachSegment(function (start, end) {
         let dx = end[0] - start[0];
         let dy = end[1] - start[1];
@@ -145,7 +143,7 @@ export default {
       // 从而绘制内部箭头
       for (let i = 1; i < arrowNum; ++i) {
         const arrowCoord = geometry.getCoordinateAt(i / arrowNum);
-        const d = i * geoStep;
+        const d = i * StepLength;
         const grid = distances.findIndex((x) => x <= d);
 
         styles.push(
