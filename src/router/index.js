@@ -1,10 +1,10 @@
 /*
  * @Author:
  * @Date: 2022-08-05 23:40:22
- * @LastEditTime: 2022-08-06 23:03:34
- * @LastEditors: qiulongwen
+ * @LastEditTime: 2022-10-02 22:21:18
+ * @LastEditors: LittleQ
  * @Description:
- * @FilePath: \ol_plugins\src\router\index.js
+ * @FilePath: \ol_plugins_vue\src\router\index.js
  */
 import Vue from "vue";
 import VueRouter from "vue-router";
@@ -19,6 +19,24 @@ const routes = [
     component: Home,
     // component: () =>
     //   import(/* webpackChunkName: "about" */ "../views/About.vue"),
+    children: [
+      {
+        path: "/navigator/index",
+        component: () => import("../views/openlayers/Map.vue"),
+      },
+      {
+        path: "/navigatortwo/index",
+        component: () => import("../views/openlayers/Map_Tracker.vue"),
+      },
+      {
+        path: "/navigatorTherr/index",
+        component: () => import("../views/openlayers/Map_Tracker2.vue"),
+      },
+      {
+        path: "/navigatorFour/index",
+        component: () => import("../views/openlayers/Map_WebglPoints.vue"),
+      },
+    ],
   },
 ];
 
